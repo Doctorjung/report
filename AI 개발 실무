@@ -1,0 +1,42 @@
+import pandas as pd
+from nltk.metrics import edit_distance
+
+class SimpleChatBot:
+    def __init__(self, filepath):
+        self.questions, self.answers = self.load_data(filepath)
+
+    def load_data(self, filepath):
+        data = pd.read_csv(filepath)
+        questions = data['Q'].tolist()  # 학습 데이터 파일에서 질문 컬럼을 리스트로 변환
+        answers = data['A'].tolist()  # 학습 데이터 파일에서 답변 컬럼을 리스트로 변환
+        return questions, answers
+
+    def calculate_levenshtein_distance(self, input_sentence, question):
+        return edit_distance(input_sentence, question)  # 입력 문장과 학습 데이터 질문 사이의 레벤슈타인 거리 계산
+
+    def find_best_answer(self, input_sentence):
+        best_distance = float('inf')  # 초기 거리를 무한대로 설정
+        best_index = -1  # 가장 유사한 학습 데이터 질문의 인덱스 초기화
+
+        for i in range(len(self.questions)):
+            distance = self.calculate_levenshtein_distance(input_sentence, self.questions[i])  # 레벤슈타인 거리 계산
+            if distance < best_distance:
+                best_distance = distance  # 레벤슈타인 거리 업데이트
+                best_index = i  # 가장 유사한 학습 데이터 질문의 인덱스 업데이트
+
+        return self.answers[best_index]  # 가장 유사한 학습 데이터 질문에 해당하는 답변 반환
+
+# 데이터 파일의 경로를 지정합니다.
+filepath = 'ChatbotData.csv'
+
+# 챗봇 객체를 생성합니다.
+chatbot = SimpleChatBot(filepath)
+
+# '종료'라는 입력이 나올 때까지 사용자의 입력에 따라 챗봇의 응답을 출력하는 무한 루프를 실행합니다.
+while True:
+    input_sentence = input('You: ')
+    if input_sentence.lower() == '종료':
+        break
+    best_answer = chatbot.find_best_answer(input_sentence)  # 가장 유사한 학습 데이터 질문에 대한 답변을 찾습니다.
+    best_index = chatbot.questions.index(input_sentence)  # 가장 유사한 학습 데이터 질문의 인덱스를 찾습니다.
+    print(f"Chatbot: {chatbot.answers[best_index]}")  # 가장 유사한 학습 데이터 질문에 대한 답변을 출력합니다.
